@@ -1,3 +1,68 @@
+const orGate: number[][] = [
+    [0,0,0],
+    [1,0,1],
+    [0,1,1],
+    [1,1,1],
+];
+
+const andGate: number[][] = [
+    [0,0,0],
+    [1,0,0],
+    [0,1,0],
+    [1,1,1],
+];
+
+const nandGate: number[][] = [
+    [0,0,1],
+    [1,0,1],
+    [0,1,1],
+    [1,1,0],
+];
+
+const xorGate: number[][] = [
+    [0,0,0],
+    [1,0,1],
+    [0,1,1],
+    [1,1,0],
+];
+
+const norGate: number[][] = [
+    [0,0,1],
+    [1,0,0],
+    [0,1,0],
+    [1,1,0],
+];
+
+const train: number[][] = [...xorGate];
+const trainCount: number = train.length*train[0].length;
+
+function main(): void{
+
+    const epsilon = 1e-1;
+    const rate = 1e-1;
+
+    const model: Gate = new Gate();
+    model.log();
+
+    console.log('-----------------');
+    console.log(`loss before = ${model.loss()}`);
+
+    for(let i = 0; i < 100*1000; ++i){
+        const gradientXor: Gate = model.finiteDiff(epsilon);
+        model.learn(gradientXor, rate);
+    }
+    console.log('-----------------');
+
+    console.log(`loss after = ${model.loss()}`);
+    console.log('Xor Gate:');
+    for(let i = 0; i < 2; ++i){
+        for(let j = 0; j < 2; ++j){
+            console.log(`${i} ? ${j} = ${model.forward(i, j)}`);
+        }
+    }
+
+}
+
 class Gate {
 
     neurons: number[][];
@@ -33,7 +98,7 @@ class Gate {
         for (let i = 0; i < train.length; ++i) {
             const x1: number = train[i][0];
             const x2: number = train[i][1];
-            const y: number = forward(this, x1, x2);
+            const y: number = this.forward(x1, x2);
             const d: number = y - train[i][2];
             result += d*d;
         }
@@ -47,6 +112,31 @@ class Gate {
                 this.neurons[i][j] -= gradient.neurons[i][j] * rate;
             }
         }
+    }
+
+    forward(x: number, y: number): number {
+        const a: number = this.sigmoidf(this.neurons[0][0] * x + this.neurons[0][1] * y + this.neurons[0][2]);
+        const b: number = this.sigmoidf(this.neurons[1][0] * x + this.neurons[1][1] * y + this.neurons[1][2]);
+        return this.sigmoidf(a*this.neurons[2][0] + b*this.neurons[2][1] + this.neurons[2][2]);
+    }
+
+    sigmoidf(x: number): number {
+        return 1 / (1 + Math.exp(-x));
+    }
+
+    finiteDiff(epsilon: number): Gate{
+        let gradientXor: Gate = new Gate();
+        const l = this.loss();
+
+        for(let i = 0; i < this.neurons.length; ++i){
+            for(let j = 0; j < this.neurons[i].length; ++j){
+                const saved: number = this.neurons[i][j];
+                this.neurons[i][j] += epsilon;
+                gradientXor.neurons[i][j] = (this.loss() - l)/epsilon;
+                this.neurons[i][j] = saved;
+            }
+        }
+        return gradientXor;
     }
 
     copy(model: Gate): void{
@@ -63,94 +153,6 @@ class Gate {
         }
     }
 };
-
-const orGate: number[][] = [
-    [0,0,0],
-    [1,0,1],
-    [0,1,1],
-    [1,1,1],
-];
-
-const andGate: number[][] = [
-    [0,0,0],
-    [1,0,0],
-    [0,1,0],
-    [1,1,1],
-];
-
-const nandGate: number[][] = [
-    [0,0,1],
-    [1,0,1],
-    [0,1,1],
-    [1,1,0],
-];
-
-
-const xorGate: number[][] = [
-    [0,0,0],
-    [1,0,1],
-    [0,1,1],
-    [1,1,0],
-];
-
-const norGate: number[][] = [
-    [0,0,1],
-    [1,0,0],
-    [0,1,0],
-    [1,1,0],
-];
-
-const train: number[][] = [...xorGate];
-const trainCount: number = train.length*train[0].length;
-
-function main(): void{
-    const epsilon = 1e-1;
-    const rate = 1e-1;
-    const model: Gate = new Gate();
-    model.log();
-    console.log('-----------------');
-    console.log(`loss before = ${model.loss()}`);
-
-    for(let i = 0; i < 100*1000; ++i){
-        const gradientXor: Gate = finiteDiff(model, epsilon);
-        model.learn(gradientXor, rate);
-    }
-    console.log('-----------------');
-
-    console.log(`loss after = ${model.loss()}`);
-    console.log('Xor Gate:');
-    for(let i = 0; i < 2; ++i){
-        for(let j = 0; j < 2; ++j){
-            console.log(`${i} ? ${j} = ${forward(model, i, j)}`);
-        }
-    }
-
-}
-
-function forward(model: Gate, x: number, y: number): number {
-    const a: number = sigmoidf(model.neurons[0][0] * x + model.neurons[0][1] * y + model.neurons[0][2]);
-    const b: number = sigmoidf(model.neurons[1][0] * x + model.neurons[1][1] * y + model.neurons[1][2]);
-    return sigmoidf(a*model.neurons[2][0] + b*model.neurons[2][1] + model.neurons[2][2]);
-}
-
-function sigmoidf(x: number): number {
-    return 1 / (1 + Math.exp(-x));
-}
-
-function finiteDiff(model: Gate, epsilon: number): Gate{
-    let gradientXor: Gate = new Gate();
-    const l = model.loss();
-
-   for(let i = 0; i < model.neurons.length; ++i){
-        for(let j = 0; j < model.neurons[i].length; ++j){
-            const saved: number = model.neurons[i][j];
-            model.neurons[i][j] += epsilon;
-            gradientXor.neurons[i][j] = (model.loss() - l)/epsilon;
-            model.neurons[i][j] = saved;
-        }
-    }
-    return gradientXor;
-}
 
 
 function sfc32(a: number, b: number, c: number, d: number) {
