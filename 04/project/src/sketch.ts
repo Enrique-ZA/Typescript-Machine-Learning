@@ -3,10 +3,12 @@
 const colorWhite: [number, number, number, number] = [255, 255, 255, 255];
 const colorBlack: [number, number, number, number] = [0, 0, 0, 255];
 
-function preload(): void{
+function preload(): void {
+    // const m: Matrix = matrixCreate(2,2);
+    // console.log(m);
 }
 
-function setup(): void{
+function setup(): void {
     // @ts-ignore
     createCanvas(600, 600);    
 }
@@ -33,12 +35,22 @@ interface Matrix {
 function matrixCreate(numRows: number, numCols: number): Matrix {
     let mat: number[][] = [];
     for(let i = 0; i < numRows; ++i){
+        mat[i] = [];
         for(let j = 0; j < numCols; ++j){
             mat[i][j] = -1;
         }
     }
     return {rows: numRows, cols: numCols, data: mat};
 }
+
+// function matrixDot(dst: Matrix, a: Matrix, b: Matrix): void {
+// }
+//
+// function matrixSum(dst: Matrix, a: Matrix): void {
+// }
+//
+// function matrixPrint(): void {
+// }
 
 class NN {
     constructor() {
