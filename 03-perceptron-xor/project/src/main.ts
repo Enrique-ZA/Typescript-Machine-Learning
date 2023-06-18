@@ -33,7 +33,7 @@ const norGate: number[][] = [
     [1,1,0],
 ];
 
-const train: number[][] = [...xorGate];
+const train: number[][] = [...nandGate];
 const trainCount: number = train.length*train[0].length;
 
 function main(): void{
@@ -54,12 +54,38 @@ function main(): void{
     console.log('-----------------');
 
     console.log(`loss after = ${model.loss()}`);
+
+    console.log('-----------------');
+    console.log('Neuron 1:');
+    for(let i = 0; i < 2; ++i){
+        for(let j = 0; j < 2; ++j){
+            console.log(`${i} ? ${j} = ${model.sigmoidf(model.neurons[0][0] * i + model.neurons[0][1] * j + model.neurons[0][2])}`);
+        }
+    }
+
+    console.log('-----------------');
+    console.log('Neuron 2:');
+    for(let i = 0; i < 2; ++i){
+        for(let j = 0; j < 2; ++j){
+            console.log(`${i} ? ${j} = ${model.sigmoidf(model.neurons[1][0] * i + model.neurons[1][1] * j + model.neurons[1][2])}`);
+        }
+    }
+
+    console.log('-----------------');
+    console.log('Neuron 3:');
+    for(let i = 0; i < 2; ++i){
+        for(let j = 0; j < 2; ++j){
+            console.log(`${i} ? ${j} = ${model.sigmoidf(model.neurons[2][0] * i + model.neurons[2][1] * j + model.neurons[2][2])}`); }
+    }
+
+    console.log('-----------------');
     console.log('Xor Gate:');
     for(let i = 0; i < 2; ++i){
         for(let j = 0; j < 2; ++j){
             console.log(`${i} ? ${j} = ${model.forward(i, j)}`);
         }
     }
+    console.log('-----------------');
 
 }
 
