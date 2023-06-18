@@ -4,8 +4,12 @@ const colorWhite: [number, number, number, number] = [255, 255, 255, 255];
 const colorBlack: [number, number, number, number] = [0, 0, 0, 255];
 
 function preload(): void {
-    // const m: Matrix = matrixCreate(2,2);
-    // console.log(m);
+    const m: Matrix = matrixCreate(2, 2);
+    const n: Matrix = matrixCreate(2, 2);
+    matrixFill(m, 1);
+    matrixFill(n, 1);
+    matrixSum(m, n);
+    matrixPrint(m);
 }
 
 function setup(): void {
@@ -37,20 +41,62 @@ function matrixCreate(numRows: number, numCols: number): Matrix {
     for(let i = 0; i < numRows; ++i){
         mat[i] = [];
         for(let j = 0; j < numCols; ++j){
-            mat[i][j] = -1;
+            mat[i][j] = 0;
         }
     }
     return {rows: numRows, cols: numCols, data: mat};
 }
 
-// function matrixDot(dst: Matrix, a: Matrix, b: Matrix): void {
-// }
-//
-// function matrixSum(dst: Matrix, a: Matrix): void {
-// }
-//
-// function matrixPrint(): void {
-// }
+function matrixMult(dst: Matrix, a: Matrix, b: Matrix): void {
+    if(a.cols !== b.rows){
+       console.error('matrix dot error'); 
+    }
+    const n = a.cols;
+    if(a.rows !== dst.rows || a.cols !== dst.cols){
+       console.error('matrix dot error'); 
+    }
+    for(let i = 0; i < dst.rows; ++i){
+        for(let j = 0; j < dst.cols; ++j){
+            dst.data[i][j] = 0;
+            for(let k = 0; k < n; ++k){
+                dst.data[i][j] += a.data[i][k] * b.data[k][j];
+            }
+        }
+    }
+}
+
+function matrixFill(mat: Matrix, num: number): void {
+    for(let i = 0; i < mat.rows; ++i){
+        for(let j = 0; j < mat.cols; ++j){
+            mat.data[i][j] = num;
+        }
+    }
+}
+
+function matrixSum(dst: Matrix, a: Matrix): void {
+    if (dst.rows !== a.rows || dst.cols !== a.cols) {
+        return;
+    }
+    for(let i = 0; i < dst.rows; ++i){
+        for(let j = 0; j < dst.cols; ++j){
+            dst.data[i][j] += a.data[i][j];
+        }
+    }
+}
+
+function matrixRandomize(mat: Matrix, low: number, high: number): void {
+    const seed: number[] = cyrb128(Math.random().toString());
+    const rnd: () => number = sfc32(seed[0], seed[1], seed[2], seed[3]);
+    for(let i = 0; i < mat.rows; ++i){
+        for(let j = 0; j < mat.cols; ++j){
+            mat.data[i][j] = rnd() * (high - low) + low;
+        }
+    }
+}
+
+function matrixPrint(mat: Matrix): void {
+    console.table(mat.data);
+}
 
 class NN {
     constructor() {

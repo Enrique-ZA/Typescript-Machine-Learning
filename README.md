@@ -1,3 +1,4 @@
 * CREDIT:
-- based on github.com/tsoding/ml-notes and github.com/tsoding/perceptron
-- Subscribe YT - @TsodingDaily
+    - Machine Learning in C - @TsodingDaily
+    - Subscribe YT - @TsodingDaily
+    - based on github.com/tsoding/ml-notes
