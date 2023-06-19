@@ -8,6 +8,7 @@ const oHeight: number = 965;
 let scaleX: number = 1;
 
 let xor: Xor;
+let xorGradient: Xor;
 const td: number[][] = [
     [0, 0, 0],
     [0, 1, 1],
@@ -17,11 +18,12 @@ const td: number[][] = [
 
 function preload(): void {
 
-    const ti: Matrix = matrixCreate(td.length, 2);
-    ti.data = matrixSlice(td, 0, ti.cols);
-    const to: Matrix = matrixCreate(td.length, 1);
-    to.data = matrixSlice(td, 2, to.cols);
-
+    // const ti: Matrix = matrixCreate(td.length, 2);
+    // ti.data = matrixSlice(td, 0, ti.cols);
+    // const to: Matrix = matrixCreate(td.length, 1);
+    // to.data = matrixSlice(td, 2, to.cols);
+    // console.log(ti);
+    // console.log(to);
     xor = xorCreate(
         matrixCreate(1, 2), // mA0 
 
@@ -34,19 +36,45 @@ function preload(): void {
         matrixCreate(1, 1), // a2 
     );
 
+    xorGradient = xorCreate(
+        matrixCreate(1, 2), // mA0 
+
+        matrixCreate(2, 2), // w1 
+        matrixCreate(1, 2), // b1 
+        matrixCreate(1, 2), // a1 
+
+        matrixCreate(2, 1), // w2 
+        matrixCreate(1, 1), // b2 
+        matrixCreate(1, 1), // a2 
+    );
+
     xorRandomize(xor);
+    xorRandomize(xorGradient);
 
-    console.log(`loss = ${loss(xor, ti, to)}`);
+    console.table(xorGradient.weightsLayer1.data);
 
-    for(let i = 0; i < 2; ++i){
-        for(let j = 0; j < 2; ++j){
-            xor.mA0.data[0][0] = i;
-            xor.mA0.data[0][1] = j;
-            xorForward(xor);
-            const y = xor.mA2.data[0][0];
-            console.log(`${i} ^ ${j} = ${y}`);
-        }
+    const epsilon: number = 1e-1;
+    // const rate: number = 1e-1;
+
+    // console.log(`loss = ${loss(xor, ti, to)}`);
+
+    for(let i = 0; i < 1; ++i){
+        finiteDiff(xor, xorGradient, epsilon, td);
+        // xorLearn(xor, xorGradient, rate);
     }
+
+    console.table(xorGradient.weightsLayer1.data);
+    // console.log(`loss = ${loss(xor, ti, to)}`);
+
+    // for(let i = 0; i < 2; ++i){
+    //     for(let j = 0; j < 2; ++j){
+    //         xor.mA0.data[0][0] = i;
+    //         xor.mA0.data[0][1] = j;
+    //         xorForward(xor);
+    //         const y = xor.mA2.data[0][0];
+    //         console.log(`${i} ^ ${j} = ${y}`);
+    //     }
+    // }
 }
 
 function setup(): void {
@@ -54,89 +82,135 @@ function setup(): void {
     createCanvas(windowWidth, windowHeight); // 1920 x 965    
 }
 
-function draw(){
-    // update
-    const w = 120;
-    const h = 120;
+// function draw(){
+//     // update
+//     const w = 120;
+//     const h = 120;
+//
+//     // @ts-ignore
+//     const pos1 = {x: width/8, y: height/4};
+//     // @ts-ignore
+//     const pos2 = {x: pos1.x, y: height/1.5};
+//     // @ts-ignore
+//     const pos3 = {x: width/2.5, y: pos1.y};
+//     // @ts-ignore
+//     const pos4 = {x: pos3.x, y: pos2.y};
+//     // @ts-ignore
+//     const dX = (pos3.x)-(pos1.x);
+//     // @ts-ignore
+//     const dY = ((pos2.y)-(pos1.y))/2;
+//     // @ts-ignore
+//     const pos5 = {x: pos3.x+dX, y: pos1.y+dY};
+//
+//     // @ts-ignore
+//     scaleX = width / oWidth;
+//     // @ts-ignore
+//     scale(scaleX,scaleX);
+//
+//     // draw
+//     // @ts-ignore
+//     background(colorBlack);
+//
+//     // @ts-ignore
+//     drawText(colorWhite, 20, xor.weightsLayer1.data.toString(), 10, 30);
+//     // @ts-ignore
+//     drawText(colorWhite, 20, xor.biasesLayer1.data.toString(), 10, 60);
+//     // @ts-ignore
+//     drawText(colorWhite, 20, xor.weightsLayer2.data.toString(), 10, 90);
+//     // @ts-ignore
+//     drawText(colorWhite, 20, xor.biasesLayer2.data.toString(), 10, 120);
+//
+//     // @ts-ignore
+//     push();
+//     // @ts-ignore
+//     fill(colorWhite);
+//     // @ts-ignore
+//     noStroke();
+//     // @ts-ignore
+//     ellipse(pos1.x, pos1.y, w, h);
+//     // @ts-ignore
+//     ellipse(pos2.x, pos2.y, w, h);
+//     // @ts-ignore
+//     ellipse(pos3.x, pos3.y, w, h);
+//     // @ts-ignore
+//     ellipse(pos4.x, pos4.y, w, h);
+//     // @ts-ignore
+//     ellipse(pos5.x, pos5.y, w, h);
+//     // @ts-ignore
+//     pop();
+// }
 
-    // @ts-ignore
-    const pos1 = {x: width/8, y: height/4};
-    // @ts-ignore
-    const pos2 = {x: pos1.x, y: height/1.5};
-    // @ts-ignore
-    const pos3 = {x: width/2.5, y: pos1.y};
-    // @ts-ignore
-    const pos4 = {x: pos3.x, y: pos2.y};
-    // @ts-ignore
-    const dX = (pos3.x)-(pos1.x);
-    // @ts-ignore
-    const dY = ((pos2.y)-(pos1.y))/2;
-    // @ts-ignore
-    const pos5 = {x: pos3.x+dX, y: pos1.y+dY};
+function loss(xr: Xor, t: number[][]): number {
+    // if(ti.rows != to.rows || to.cols != xr.mA2.cols){
+    //     console.error('loss error 1: rows or cols do not match');
+    // } 
+    // const n = ti.rows;
+    // let l = 0;
+    // for(let i = 0; i < n; ++i){
+    //     const x: Matrix = matrixRow(ti,i);
+    //     const y: Matrix = matrixRow(to,i)
+    //
+    //     matrixCopy(xr.mA0, x);
+    //     xorForward(xr);
+    //
+    //     const m = to.cols;
+    //     for(let j = 0; j < m; ++j){
+    //         const dist = xr.mA2.data[0][j] - y.data[0][j];
+    //         l += dist * dist;
+    //     }
+    // }
+    // console.log(`l/n = ${l/n}`);
+    // return l / n;
 
-    // @ts-ignore
-    scaleX = width / oWidth;
-    // @ts-ignore
-    scale(scaleX,scaleX);
-
-    // draw
-    // @ts-ignore
-    background(colorBlack);
-
-    // @ts-ignore
-    drawText(colorWhite, 20, xor.weightsLayer1.data.toString(), 10, 30);
-    // @ts-ignore
-    drawText(colorWhite, 20, xor.biasesLayer1.data.toString(), 10, 60);
-    // @ts-ignore
-    drawText(colorWhite, 20, xor.weightsLayer2.data.toString(), 10, 90);
-    // @ts-ignore
-    drawText(colorWhite, 20, xor.biasesLayer2.data.toString(), 10, 120);
-
-    // @ts-ignore
-    push();
-    // @ts-ignore
-    fill(colorWhite);
-    // @ts-ignore
-    noStroke();
-    // @ts-ignore
-    ellipse(pos1.x, pos1.y, w, h);
-    // @ts-ignore
-    ellipse(pos2.x, pos2.y, w, h);
-    // @ts-ignore
-    ellipse(pos3.x, pos3.y, w, h);
-    // @ts-ignore
-    ellipse(pos4.x, pos4.y, w, h);
-    // @ts-ignore
-    ellipse(pos5.x, pos5.y, w, h);
-    // @ts-ignore
-    pop();
+    let result: number = 0;
+    for(let i = 0; i < t.length; ++i){
+        const x1: number = t[i][0]; 
+        const x2: number = t[i][1];
+        console.log(x1);
+        console.log(x2);
+        xr.mA0.data[i][0] = x1;
+        xr.mA0.data[i][1] = x2;
+        xorForward(xr);
+        const y = xr.mA2.data[0][0];
+        const d = y - t[i][2];
+        result += d * d;
+    }
+    return result;
 }
 
-function loss(xr: Xor, ti: Matrix, to: Matrix): number {
-    if(ti.rows != to.rows || to.cols != xr.mA2.cols){
-        console.error('loss error 1: rows or cols do not match');
-    } 
-    const n = ti.rows;
-    let l = 0;
-    for(let i = 0; i < n; ++i){
-        const x: Matrix = matrixRow(ti,i);
-        const y: Matrix = matrixRow(to,i)
-
-        matrixCopy(xr.mA0, x);
-        xorForward(xr);
-
-        const m = to.cols;
-        for(let j = 0; j < m; ++j){
-            const dist = xr.mA2.data[0][j] - y.data[0][j];
-            l += dist * dist;
+function wiggle(xr: Xor, xrMat: Matrix, gradientMat: Matrix, epsilon: number, t: number[][]): void {
+    let saved: number;
+    const l = loss(xr, t);
+    for(let i = 0; i < xrMat.rows; ++i){
+        for(let j = 0; j < xrMat.cols; ++j){
+            saved = xrMat.data[i][j];
+            xrMat.data[i][j] += epsilon;
+            console.log("here3");
+            console.log((loss(xr, t)));
+            console.log(l);
+            gradientMat.data[i][j] = (loss(xr, t)-l)/epsilon;
+            xrMat.data[i][j] = saved;
         }
     }
-    return l / n;
 }
 
-function finiteDiff(xr: Xor, gradient: Xor, epsilon: number, ti: Matrix, to: Matrix): void {
-    let saved: number;
-    const l = loss(xr, ti, to);
+function finiteDiff(xr: Xor, gradient: Xor, epsilon: number, t: number[][]): void {
+    wiggle(xr, xr.weightsLayer1, gradient.weightsLayer1, epsilon, t);
+    console.log("here");
+    console.table(xr.weightsLayer1.data);
+    console.log("here2");
+    console.table(gradient.weightsLayer1.data);
+    // wiggle(xr, xr.biasesLayer1, gradient.biasesLayer1, epsilon, ti, to);
+    // wiggle(xr, xr.weightsLayer2, gradient.weightsLayer2, epsilon, ti, to);
+    // wiggle(xr, xr.biasesLayer2, gradient.biasesLayer2, epsilon, ti, to);
+}
+
+function wiggleSub(xrMat: Matrix, gradientMat: Matrix, rate: number): void {
+    for(let i = 0; i < xrMat.rows; ++i){
+        for(let j = 0; j < xrMat.cols; ++j){
+            xrMat.data[i][j] -= gradientMat.data[i][j] * rate;
+        }
+    }
 }
 
 interface Xor {
@@ -145,6 +219,12 @@ interface Xor {
     weightsLayer2: Matrix; biasesLayer2: Matrix; mA2: Matrix;
 }
 
+function xorLearn(xr: Xor, gr: Xor, rate: number): void {
+    wiggleSub(xr.weightsLayer1, gr.weightsLayer1, rate);
+    wiggleSub(xr.biasesLayer1, gr.biasesLayer1, rate);
+    wiggleSub(xr.weightsLayer2, gr.weightsLayer2, rate);
+    wiggleSub(xr.biasesLayer2, gr.biasesLayer2, rate);
+}
 
 function xorRandomize(xr: Xor): void {
     matrixRandomize(xr.weightsLayer1, 0, 1);
