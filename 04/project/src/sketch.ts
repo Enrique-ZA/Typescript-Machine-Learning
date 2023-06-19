@@ -18,12 +18,11 @@ const td: number[][] = [
 
 function preload(): void {
 
-    // const ti: Matrix = matrixCreate(td.length, 2);
-    // ti.data = matrixSlice(td, 0, ti.cols);
-    // const to: Matrix = matrixCreate(td.length, 1);
-    // to.data = matrixSlice(td, 2, to.cols);
-    // console.log(ti);
-    // console.log(to);
+    const ti: Matrix = matrixCreate(td.length, 2);
+    ti.data = matrixSlice(td, 0, ti.cols);
+    const to: Matrix = matrixCreate(td.length, 1);
+    to.data = matrixSlice(td, 2, to.cols);
+
     xor = xorCreate(
         matrixCreate(1, 2), // mA0 
 
@@ -51,20 +50,17 @@ function preload(): void {
     xorRandomize(xor);
     xorRandomize(xorGradient);
 
-    console.table(xorGradient.weightsLayer1.data);
-
     const epsilon: number = 1e-1;
-    // const rate: number = 1e-1;
+    const rate: number = 1e-1;
 
-    // console.log(`loss = ${loss(xor, ti, to)}`);
+    console.log(`loss = ${loss(xor, ti, to)}`);
 
-    for(let i = 0; i < 1; ++i){
-        finiteDiff(xor, xorGradient, epsilon, td);
-        // xorLearn(xor, xorGradient, rate);
+    for(let i = 0; i < 1000; ++i){
+        finiteDiff(xor, xorGradient, epsilon, ti, to);
+        xorLearn(xor, xorGradient, rate);
     }
 
-    console.table(xorGradient.weightsLayer1.data);
-    // console.log(`loss = ${loss(xor, ti, to)}`);
+    console.log(`loss = ${loss(xor, ti, to)}`);
 
     // for(let i = 0; i < 2; ++i){
     //     for(let j = 0; j < 2; ++j){
@@ -140,69 +136,47 @@ function setup(): void {
 //     pop();
 // }
 
-function loss(xr: Xor, t: number[][]): number {
-    // if(ti.rows != to.rows || to.cols != xr.mA2.cols){
-    //     console.error('loss error 1: rows or cols do not match');
-    // } 
-    // const n = ti.rows;
-    // let l = 0;
-    // for(let i = 0; i < n; ++i){
-    //     const x: Matrix = matrixRow(ti,i);
-    //     const y: Matrix = matrixRow(to,i)
-    //
-    //     matrixCopy(xr.mA0, x);
-    //     xorForward(xr);
-    //
-    //     const m = to.cols;
-    //     for(let j = 0; j < m; ++j){
-    //         const dist = xr.mA2.data[0][j] - y.data[0][j];
-    //         l += dist * dist;
-    //     }
-    // }
-    // console.log(`l/n = ${l/n}`);
-    // return l / n;
+function loss(xr: Xor, ti: Matrix, to: Matrix): number {
+    if(ti.rows != to.rows || to.cols != xr.mA2.cols){
+        console.error('loss error 1: rows or cols do not match');
+    } 
+    const n = ti.rows;
+    let l = 0;
+    for(let i = 0; i < n; ++i){
+        const x: Matrix = matrixRow(ti,i);
+        const y: Matrix = matrixRow(to,i)
 
-    let result: number = 0;
-    for(let i = 0; i < t.length; ++i){
-        const x1: number = t[i][0]; 
-        const x2: number = t[i][1];
-        console.log(x1);
-        console.log(x2);
-        xr.mA0.data[i][0] = x1;
-        xr.mA0.data[i][1] = x2;
+        matrixCopy(xr.mA0, x);
         xorForward(xr);
-        const y = xr.mA2.data[0][0];
-        const d = y - t[i][2];
-        result += d * d;
+
+        const m = to.cols;
+        for(let j = 0; j < m; ++j){
+            const dist = xr.mA2.data[0][j] - y.data[0][j];
+            l += dist * dist;
+        }
     }
-    return result;
+    return l/n;
 }
 
-function wiggle(xr: Xor, xrMat: Matrix, gradientMat: Matrix, epsilon: number, t: number[][]): void {
+function wiggle(xr: Xor, xrMat: Matrix, gradientMat: Matrix, epsilon: number, ti: Matrix, to: Matrix): void {
     let saved: number;
-    const l = loss(xr, t);
+    const l = loss(xr, ti, to);
     for(let i = 0; i < xrMat.rows; ++i){
         for(let j = 0; j < xrMat.cols; ++j){
             saved = xrMat.data[i][j];
             xrMat.data[i][j] += epsilon;
-            console.log("here3");
-            console.log((loss(xr, t)));
-            console.log(l);
-            gradientMat.data[i][j] = (loss(xr, t)-l)/epsilon;
+            xorForward(xr);
+            gradientMat.data[i][j] = (loss(xr, ti, to)-l)/epsilon;
             xrMat.data[i][j] = saved;
         }
     }
 }
 
-function finiteDiff(xr: Xor, gradient: Xor, epsilon: number, t: number[][]): void {
-    wiggle(xr, xr.weightsLayer1, gradient.weightsLayer1, epsilon, t);
-    console.log("here");
-    console.table(xr.weightsLayer1.data);
-    console.log("here2");
-    console.table(gradient.weightsLayer1.data);
-    // wiggle(xr, xr.biasesLayer1, gradient.biasesLayer1, epsilon, ti, to);
-    // wiggle(xr, xr.weightsLayer2, gradient.weightsLayer2, epsilon, ti, to);
-    // wiggle(xr, xr.biasesLayer2, gradient.biasesLayer2, epsilon, ti, to);
+function finiteDiff(xr: Xor, gradient: Xor, epsilon: number, ti: Matrix, to: Matrix): void {
+    wiggle(xr, xr.weightsLayer1, gradient.weightsLayer1, epsilon, ti, to);
+    wiggle(xr, xr.biasesLayer1, gradient.biasesLayer1, epsilon, ti, to);
+    wiggle(xr, xr.weightsLayer2, gradient.weightsLayer2, epsilon, ti, to);
+    wiggle(xr, xr.biasesLayer2, gradient.biasesLayer2, epsilon, ti, to);
 }
 
 function wiggleSub(xrMat: Matrix, gradientMat: Matrix, rate: number): void {
