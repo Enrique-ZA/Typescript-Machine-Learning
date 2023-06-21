@@ -27,39 +27,6 @@ function main(){
         matrixCreate(1, 1),
     )
 
-    // or
-    xor.expected = [
-        0,0,0,
-        1,0,1,
-        0,1,1,
-        1,1,1,
-    ];
-
-    // and
-    xor.expected = [
-        0,0,0,
-        1,0,0,
-        0,1,0,
-        1,1,1,
-    ];
-
-    // nand
-    xor.expected = [
-        0,0,1,
-        1,0,1,
-        0,1,1,
-        1,1,0,
-    ];
-
-    // nor
-    xor.expected = [
-        0,0,1,
-        1,0,0,
-        0,1,0,
-        1,1,0,
-    ];
-
-    // xor
     xor.expected = [
         0, 0, 0,
         0, 1, 1,
@@ -88,12 +55,12 @@ function main(){
 
     const epsilon = 1e-1;
     const rate = 1e-1;
-    // console.log(`loss = ${xorLoss(xor, ti, to)}`);
+    console.log(`loss = ${xorLoss(xor, ti, to)}`);
     for(let i = 0; i < 100*1000; ++i){
         xorFiniteDiff(xor, gradient, epsilon, ti, to);
         xorLearn(xor, gradient, rate);
     }
-    // console.log(`loss = ${xorLoss(xor, ti, to)}`);
+    console.log(`loss = ${xorLoss(xor, ti, to)}`);
 
     for(let i = 0; i < 2; ++i){
         for(let j = 0; j < 2; ++j){

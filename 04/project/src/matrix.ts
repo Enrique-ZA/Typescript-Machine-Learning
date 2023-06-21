@@ -104,3 +104,19 @@ function matrixCopy(dst: Matrix, src: Matrix): Matrix {
     dst.samples = [...src.samples];
     return dst;
 }
+
+function matrixSlice(arr: number[], rows: number, cols: number, step: number, start: number): number[] {
+    if (arr === undefined) throw new Error("array is undefined");
+    let test: number[] = [];
+    let index = start;
+    for(let i = 0; i < rows; i++){
+        for(let j = 0; j < cols; ++j){
+            if (index < arr.length) {
+                test.push(arr[index]);
+                index++;
+            }
+        }
+        index += step - cols; // Skip 'step - cols' indices after each row
+    }
+    return test;
+}
